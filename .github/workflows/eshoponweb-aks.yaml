@@ -9,8 +9,7 @@ env:
   CLUSTER_NAME: aks-demo
   
 jobs:
-  build-container:
-    if: false
+  build-container:  
     runs-on: ubuntu-latest
 
     steps:
