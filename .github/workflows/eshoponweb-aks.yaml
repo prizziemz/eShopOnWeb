@@ -5,11 +5,12 @@ env:
   ACR_LOGIN_SERVER: aistraining.azurecr.io
   TAG_NAME: eshoponweb-prissana:1.0.0
   IMAGE_NAME: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.TAG_NAME }}
-  RESOURCE_GROUP: rg-eshop-018
-  CLUSTER_NAME: aks-eshop-018
+  RESOURCE_GROUP: ais-training
+  CLUSTER_NAME: aks-demo
   
 jobs:
   build-container:
+    if: false
     runs-on: ubuntu-latest
 
     steps:
