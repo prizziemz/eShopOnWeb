@@ -1,48 +1,72 @@
 name: Container Workflow
-on: workflow_dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      dockerfile-choice:
+        description: 'เลือก Dockerfile ที่ต้องการ Build'
+        required: true
+        default: 'src/Web/Dockerfile'
+        type: choice
+        options:
+          - src/Web/Dockerfile
+          - src/PublicApi/Dockerfile
 
 env:
   ACR_LOGIN_SERVER: aistraining.azurecr.io
-  TAG_NAME: eshoponweb-prissana:1.0.0
-  IMAGE_NAME: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.TAG_NAME }}
-  RESOURCE_GROUP: ais-training
-  CLUSTER_NAME: aks-demo
-  
-jobs:
-  build-container:  
-    runs-on: ubuntu-latest
+  ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+  ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+  TAG_NAME: eshoponweb-webapp-user18
+  IMAGE_VERSION: 1.0.0
+  AZURE_AKS_CLUSTER: aks-demo
+  AZURE_RESOURCE_GROUP: ais-training
 
+jobs:
+  build:
+    #if: false
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkput source code
-        uses: actions/checkout@v7.0.0
+      - name: Checkout repository
+        uses: actions/checkout@v4 
 
       - name: ACR Login
-        uses: azure/docker-login@v1
+        uses: azure/docker-login@v2 
         with:
-          login-vserver: ${{ env.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD}}
+          login-server: ${{ env.ACR_LOGIN_SERVER }}
+          username: ${{ env.ACR_USERNAME }}
+          password: ${{ env.ACR_PASSWORD }}
 
-      - name: Build and Push Image
-        run: |
-          docker build -f src/Web/Dockerfile -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.TAG_NAME }} .
-          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.TAG_NAME }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ inputs.dockerfile-choice }}
+          push: true
+          tags: |
+            ${{ env.ACR_LOGIN_SERVER }}/${{env.TAG_NAME}}${{ inputs.dockerfile-choice == 'src/Web/Dockerfile' && 'webapp' || 'publicapi' }}:${{ env.IMAGE_VERSION }}
+
   deploy-to-aks:
-    needs: build-container
-    runs-on: ubuntu-latest    
-
+    # needs: build
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v7.0.0
-      - uses: azure/aks-set-context@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4 
+
+      - name: Azure Login
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          resource-group: ${{ secrets.RESOURCE_GROUP }}
-          cluster-name: ${{ secrets.CLUSTER_NAME }}
-      - uses: azure/k8s-deploy@v1
+
+      - name: AKS Set Context
+        uses: azure/aks-set-context@v2
+        with:
+          cluster-name: ${{ env.AZURE_AKS_CLUSTER }}
+          resource-group: ${{ env.AZURE_RESOURCE_GROUP }}
+
+      - name: K8s Deployment
+        uses: azure/k8s-deploy@v4
         with:
           manifests: |
-            .k8s/services.yaml
             .k8s/deployment.yaml
-          images: ${{ env.ACR_LOGIN_SERVER }}/${{ env.TAG_NAME }}
-       
+            .k8s/service.yaml
+          image: ${{ env.ACR_LOGIN_SERVER }}/${{env.TAG_NAME}}${{ inputs.dockerfile-choice == 'src/Web/Dockerfile' && 'webapp' || 'publicapi' }}:${{ env.IMAGE_VERSION }}
