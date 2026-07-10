@@ -1,14 +1,32 @@
+# 1. Namespace ต้องอยู่บนสุด
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: eshoponweb-user018
+---
+# 2. Service
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: eshoponweb-prissana
+  namespace: eshoponweb-user018
   name: webapp
-  
+  labels:
+    app: sample-app
+    service: webapp
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    service: webapp
 ---
+# 3. Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: eshoponweb-prissana
+  namespace: eshoponweb-user018
   name: webapp
   labels:
     app: sample-app
@@ -25,7 +43,8 @@ spec:
     spec:
       containers:
         - name: webapp
-          image: aistraining.azurecr.io/eshoponweb-prissana:1.0.0
+          # ตรวจสอบชื่อ Registry และ Image ให้ตรงกับที่อยู่ใน ACR
+          image: aistraining.azurecr.io/eshoponweb-webapp-user010webapp:1.0.3
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -34,4 +53,4 @@ spec:
             - name: ASPNETCORE_URLS
               value: http://+:80
             - name: WebApiBaseAddress
-              value: http://webapi
+              value: <a href="http://webapi" rel="noreferrer noopener" title="http://webapi/" target="_blank">http://webapi</a>

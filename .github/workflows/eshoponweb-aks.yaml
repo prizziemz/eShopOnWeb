@@ -16,8 +16,8 @@ env:
   ACR_LOGIN_SERVER: aistraining.azurecr.io
   ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
   ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
-  TAG_NAME: eshoponweb-019
-  IMAGE_VERSION: 1.0.0
+  TAG_NAME: eshoponweb-webapp-user018
+  IMAGE_VERSION: 1.0.5
   AZURE_AKS_CLUSTER: aks-demo
   AZURE_RESOURCE_GROUP: ais-training
 
@@ -47,6 +47,7 @@ jobs:
 
   deploy-to-aks:
     # needs: build
+    # if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -66,8 +67,7 @@ jobs:
       - name: K8s Deployment
         uses: azure/k8s-deploy@v4
         with:
-          namespace: eshoponweb-prissana
+          namespace: eshoponweb-user018
           manifests: |
             .k8s/deployment.yaml
-            .k8s/services.yaml
           image: ${{ env.ACR_LOGIN_SERVER }}/${{env.TAG_NAME}}${{ inputs.dockerfile-choice == 'src/Web/Dockerfile' && 'webapp' || 'publicapi' }}:${{ env.IMAGE_VERSION }}
