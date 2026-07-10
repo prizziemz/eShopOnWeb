@@ -16,14 +16,14 @@ env:
   ACR_LOGIN_SERVER: aistraining.azurecr.io
   ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
   ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
-  TAG_NAME: eshoponweb-webapp-user18
+  TAG_NAME: eshoponweb-019
   IMAGE_VERSION: 1.0.0
   AZURE_AKS_CLUSTER: aks-demo
   AZURE_RESOURCE_GROUP: ais-training
 
 jobs:
   build:
-    #if: false
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
