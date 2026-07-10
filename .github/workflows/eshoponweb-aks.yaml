@@ -66,6 +66,7 @@ jobs:
       - name: K8s Deployment
         uses: azure/k8s-deploy@v4
         with:
+          namespace: eshoponweb-prissana
           manifests: |
             .k8s/deployment.yaml
             .k8s/services.yaml
